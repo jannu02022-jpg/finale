@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Sports Cars — Latest Models Dashboard</title>
+  <style>
+    /* Reset + base */
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#9aa6b2; --accent:#ff4d4f;
+      --glass: rgba(255,255,255,0.03);
+      --radius:14px;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      background: linear-gradient(180deg,#071021 0%, #0b1220 60%);
+      color:#e6eef6;
+      -webkit-font-smoothing:antialiased;
+      min-height:100vh;
+      padding:28px;
+    }
+
+    header{
+      display:flex;
+      gap:18px;
+      align-items:center;
+      margin-bottom:22px;
+    }
+    h1{margin:0;font-size:1.6rem}
+    .controls{
+      margin-left:auto;
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    input[type="search"]{
+      background:var(--glass);
+      border:1px solid rgba(255,255,255,0.04);
+      padding:10px 12px;
+      border-radius:10px;
+      color:inherit;
+      min-width:220px;
+    }
+    select{
+      background:var(--glass);
+      border-radius:10px;
+      padding:10px;
+      color:inherit;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: repeat( auto-fit, minmax(260px, 1fr) );
+      gap:18px;
+      margin-top:18px;
+    }
+
+    .card{
+      background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      border-radius:var(--radius);
+      padding:12px;
+      border:1px solid rgba(255,255,255,0.03);
+      transition:transform .18s ease, box-shadow .18s;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height:340px;
+    }
+    .card:hover{ transform:translateY(-6px); box-shadow: 0 10px 30px rgba(2,6,23,0.6); }
+    .thumb{
+      height:160px;
+      border-radius:10px;
+      overflow:hidden;
+      background:#07101a;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .thumb img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .meta{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
+    .title{ font-weight:600; font-size:1.05rem; }
+    .type{ padding:6px 10px; border-radius:999px; background:rgba(255,255,255,0.03); color:var(--muted); font-size:0.82rem; }
+
+    .specs{ display:flex; gap:8px; flex-wrap:wrap; color:var(--muted); font-size:0.88rem; }
+    .specs .chip{ background: rgba(255,255,255,0.02); padding:6px 8px; border-radius:8px; }
+
+    .cta{
+      margin-top:auto;
+      display:flex;
+      gap:8px;
+      justify-content:space-between;
+      align-items:center;
+    }
+    .btn{
+      background:transparent;
+      border:1px solid rgba(255,255,255,0.06);
+      padding:8px 10px;
+      border-radius:10px;
+      cursor:pointer;
+      color:inherit;
+    }
+    .badge{ background: linear-gradient(90deg,#ff7a7a,#ff4d4f); padding:8px 12px; border-radius:10px; font-weight:700; }
+
+    /* modal */
+    .modal-backdrop{
+      position:fixed; inset:0; background:rgba(2,6,23,0.7);
+      display:flex; align-items:center; justify-content:center; z-index:60;
+      padding:18px; visibility:hidden; opacity:0; transition:opacity .18s, visibility .18s;
+    }
+    .modal-backdrop.open{ visibility:visible; opacity:1; }
+    .modal{
+      max-width:1000px; width:100%; border-radius:14px; overflow:hidden; background:linear-gradient(180deg,#07101a,#081321); display:grid; grid-template-columns:1fr 360px; gap:0;
+      border:1px solid rgba(255,255,255,0.04);
+    }
+    .modal .left{ padding:14px; }
+    .modal .left img{ width:100%; height:420px; object-fit:cover; border-radius:10px; display:block; }
+    .modal .right{ padding:18px; color:var(--muted); }
+    .close{ background:transparent; border:0; color:var(--muted); font-size:1rem; cursor:pointer; }
+
+    footer{ margin-top:22px; color:var(--muted); font-size:0.9rem; text-align:center; }
+
+    /* responsive */
+    @media (max-width:920px){
+      .modal{ grid-template-columns:1fr; }
+      .modal .left img{ height:280px; }
+    }
+
+  </style>
+</head>
+<body>
+  <header>
+    <div>
+      <h1>Sports Cars — Latest Models</h1>
+      <div style="color:var(--muted); font-size:0.9rem; margin-top:6px">
+        Browse by type — Affordable · Performance · Luxury · Exotic · Hybrid/Electric
+      </div>
+    </div>
+
+    <div class="controls" role="search">
+      <input id="search" type="search" placeholder="Search model, make, or spec..." />
+      <select id="filter">
+        <option value="all">All types</option>
+        <option value="Affordable">Affordable</option>
+        <option value="Performance">Performance</option>
+        <option value="Luxury">Luxury</option>
+        <option value="Exotic">Exotic</option>
+        <option value="Hybrid/Electric">Hybrid/Electric</option>
+      </select>
+      <button id="reset" class="btn">Reset</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="grid" id="cards"></section>
+  </main>
+
+  <footer>
+    Model selection inspired from recent 2025 sports-car lists and reviews (Car & Driver, Edmunds, KBB). See sources linked in the assistant response. :contentReference[oaicite:2]{index=2}
+  </footer>
+
+  <!-- Modal -->
+  <div id="modalBackdrop" class="modal-backdrop" aria-hidden="true">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="left">
+        <img id="modalImage" src="" alt="Car large" />
+      </div>
+      <div class="right">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h2 id="modalTitle" style="margin:0; color:#e6eef6"></h2>
+            <div id="modalMake" style="color:var(--muted); margin-top:6px"></div>
+          </div>
+          <div>
+            <button class="close" id="closeModal">✕ Close</button>
+          </div>
+        </div>
+
+        <div style="margin-top:12px; color:var(--muted)" id="modalDesc"></div>
+
+        <div style="margin-top:14px;">
+          <div style="color:var(--muted); margin-bottom:8px">Key specs</div>
+          <div id="modalSpecs" style="display:flex; gap:8px; flex-wrap:wrap"></div>
+        </div>
+
+        <div style="margin-top:18px;">
+          <a id="moreLink" target="_blank" rel="noopener" class="btn">Read full review</a>
+          <span style="margin-left:8px" id="priceTag" class="badge"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Data array: replace placeholder images with real image URLs if you want.
+    const cars = [
+      {
+        id:1, make:'Chevrolet', model:'Corvette (2025)', type:'Performance',
+        img:'https://via.placeholder.com/800x500?text=2025+Chevrolet+Corvette',
+        price:'$70,195 (base)',
+        desc:'Mid-engine performance car — praised in 2025 reviews for value & speed.',
+        specs:['495 hp (varies by trim)','Mid-engine','2 seats'],
+        link_citation:'https://www.caranddriver.com/rankings/best-sports-cars'
+      },
+      {
+        id:2, make:'Porsche', model:'911 (2025)', type:'Luxury',
+        img:'https://via.placeholder.com/800x500?text=2025+Porsche+911',
+        price:'$120k+',
+        desc:'The benchmark for driving dynamics and evolution over decades.',
+        specs:['Rear-engine','330+ hp','Excellent handling'],
+        link_citation:'https://www.edmunds.com/sports-car/'
+      },
+      {
+        id:3, make:'Ferrari', model:'296 GTB', type:'Exotic',
+        img:'https://via.placeholder.com/800x500?text=Ferrari+296+GTB',
+        price:'€ / $ (exotic pricing)',
+        desc:'Hybrid V6 supercar — hugely praised for performance and agility.',
+        specs:['Hybrid V6','~670+ hp combined','Exotic supercar'],
+        link_citation:'https://www.ferrari.com/en-EN/auto/296-gtb'
+      },
+      {
+        id:4, make:'McLaren', model:'Artura', type:'Hybrid/Electric',
+        img:'https://via.placeholder.com/800x500?text=McLaren+Artura',
+        price:'High',
+        desc:'PHEV supercar using hybrid power for performance with reduced weight.',
+        specs:['Hybrid','~680 hp','Carbon-tub structure'],
+        link_citation:'https://www.caranddriver.com'
+      },
+      {
+        id:5, make:'Mazda', model:'MX-5 Miata (2025)', type:'Affordable',
+        img:'https://via.placeholder.com/800x500?text=Mazda+MX-5+Miata',
+        price:'$30k-ish',
+        desc:'Lightweight convertible — a pure-driver affordable sports car.',
+        specs:['2.0L','203 hp (varies)','Lightweight, RWD'],
+        link_citation:'https://www.caranddriver.com/rankings/best-sports-cars'
+      }
+    ];
+
+    const cardsEl = document.getElementById('cards');
+    const searchInput = document.getElementById('search');
+    const filterSelect = document.getElementById('filter');
+    const resetBtn = document.getElementById('reset');
+
+    function renderCard(car){
+      const div = document.createElement('div');
+      div.className='card';
+      div.dataset.type=car.type;
+      div.dataset.model = (car.make + ' ' + car.model).toLowerCase();
+
+      div.innerHTML = `
+        <div class="thumb"><img src="${car.img}" alt="${car.make} ${car.model}"></div>
+        <div class="meta">
+          <div>
+            <div class="title">${car.model}</div>
+            <div style="color:var(--muted); font-size:0.92rem">${car.make}</div>
+          </div>
+          <div class="type">${car.type}</div>
+        </div>
+        <div class="specs">
+          ${car.specs.map(s=>`<div class="chip">${s}</div>`).join('')}
+        </div>
+        <div class="cta">
+          <div class="badge">${car.price}</div>
+          <div>
+            <button class="btn view">View</button>
+          </div>
+        </div>
+      `;
+      // open modal on click/view
+      div.querySelector('.view').addEventListener('click', ()=> openModal(car));
+      div.addEventListener('dblclick', ()=> openModal(car));
+      return div;
+    }
+
+    function populate(list){
+      cardsEl.innerHTML='';
+      list.forEach(c=> cardsEl.appendChild(renderCard(c)));
+    }
+
+    // initial
+    populate(cars);
+
+    // search+filter
+    function getFiltered(){
+      const q = searchInput.value.trim().toLowerCase();
+      const f = filterSelect.value;
+      return cars.filter(c=>{
+        if(f !== 'all' && c.type !== f) return false;
+        if(!q) return true;
+        return (c.make + ' ' + c.model + ' ' + (c.desc||'') ).toLowerCase().includes(q);
+      });
+    }
+
+    searchInput.addEventListener('input', ()=> populate(getFiltered()));
+    filterSelect.addEventListener('change', ()=> populate(getFiltered()));
+    resetBtn.addEventListener('click', ()=> {
+      searchInput.value=''; filterSelect.value='all'; populate(cars);
+    });
+
+    // Modal logic
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalImage = document.getElementById('modalImage');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMake = document.getElementById('modalMake');
+    const modalDesc = document.getElementById('modalDesc');
+    const modalSpecs = document.getElementById('modalSpecs');
+    const priceTag = document.getElementById('priceTag');
+    const moreLink = document.getElementById('moreLink');
+    const closeModalBtn = document.getElementById('closeModal');
+
+    function openModal(car){
+      modalImage.src = car.img;
+      modalTitle.textContent = car.model;
+      modalMake.textContent = car.make;
+      modalDesc.textContent = car.desc;
+      modalSpecs.innerHTML = car.specs.map(s => `<div class="chip">${s}</div>`).join('');
+      priceTag.textContent = car.price;
+      moreLink.href = car.link_citation || '#';
+      modalBackdrop.classList.add('open');
+      modalBackdrop.setAttribute('aria-hidden','false');
+    }
+
+    function closeModal(){
+      modalBackdrop.classList.remove('open');
+      modalBackdrop.setAttribute('aria-hidden','true');
+    }
+
+    closeModalBtn.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', (e)=> {
+      if(e.target === modalBackdrop) closeModal();
+    });
+
+    // keyboard escape
+    document.addEventListener('keydown', (e)=> {
+      if(e.key === 'Escape') closeModal();
+    });
+
+    // accessibility: allow Enter on focused cards to open (basic)
+    document.addEventListener('keyup', (e)=> {
+      if(e.key === 'Enter' && document.activeElement && document.activeElement.classList.contains('card')) {
+        const idx = Array.from(cardsEl.children).indexOf(document.activeElement);
+        if(idx>=0) openModal(cars[idx]);
+      }
+    });
+
+  </script>
+</body>
+</html>
